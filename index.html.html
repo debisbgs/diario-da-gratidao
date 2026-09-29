@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diário da Gratidão</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fdf8f6',
+              100: '#f9eee9',
+              200: '#f3dad0',
+              300: '#e7bcab',
+              400: '#d79780',
+              500: '#c8765e', // Terracotta principal
+              600: '#b65c45',
+              700: '#984835',
+              800: '#7e3e30',
+              900: '#67372b',
+            },
+            cream: {
+              50: '#fdfbf7',
+              100: '#f8f4ec',
+              200: '#efe6d5',
+              300: '#e3d3b7',
+            },
+            rose: {
+              soft: '#e8a598',
+              dusty: '#d18b80'
+            }
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Canvas Confetti -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #fdf8f6;
+      color: #4a3e3d;
+    }
+    .font-serif {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f8f4ec;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #e7bcab;
+      border-radius: 9999px;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(231, 188, 171, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-200 selection:text-brand-900 custom-scrollbar">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 glass-card border-b border-brand-200/50 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 sm:px-6 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center shadow-md shadow-brand-500/20">
+          <i class="ph-fill ph-sparkle text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-serif text-xl sm:text-2xl font-bold text-brand-900 tracking-tight leading-none">
+            Diário da Gratidão
+          </h1>
+          <p class="text-xs text-brand-600 font-medium">Cultive a paz todos os dias</p>
+        </div>
+      </div>
+
+      <!-- Header Action Controls -->
+      <div class="flex items-center space-x-2">
+        <!-- Streak Badge -->
+        <div id="streakBadge" class="flex items-center space-x-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full text-xs font-semibold shadow-sm" title="Dias consecutivos anotando a gratidão">
+          <i class="ph-fill ph-fire text-orange-500 text-base"></i>
+          <span id="streakCount">0</span> <span class="hidden sm:inline">dias</span>
+        </div>
+
+        <!-- Notification Modal Trigger -->
+        <button id="openNotificationBtn" class="p-2 text-brand-700 hover:text-brand-900 hover:bg-brand-100/60 rounded-xl transition duration-200 relative" title="Configurar Lembretes">
+          <i class="ph ph-bell text-xl"></i>
+          <span id="notificationDot" class="hidden absolute top-2 right-2 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto w-full px-4 py-6 sm:px-6 flex-grow space-y-8">
+
+    <!-- Daily Quote Box -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 text-center border border-brand-200/60 shadow-sm relative overflow-hidden group">
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand-200/40 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-300/30 rounded-full blur-2xl pointer-events-none"></div>
+      
+      <div class="relative z-10 space-y-2">
+        <div class="flex justify-center text-brand-400 mb-1">
+          <i class="ph-fill ph-quotes text-2xl"></i>
+        </div>
+        <p id="dailyQuote" class="font-serif italic text-base sm:text-lg text-brand-900 leading-relaxed max-w-2xl mx-auto">
+          "A gratidão transforma o que temos em suficiente."
+        </p>
+        <p id="dailyQuoteAuthor" class="text-xs uppercase tracking-wider font-semibold text-brand-600 mt-2">
+          — Anônimo
+        </p>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="flex border-b border-brand-200/80 space-x-6 text-sm font-semibold text-brand-600/70">
+      <button id="tabToday" class="pb-3 border-b-2 border-brand-500 text-brand-900 flex items-center space-x-2 transition">
+        <i class="ph-bold ph-pencil-line"></i>
+        <span>Hoje</span>
+      </button>
+      <button id="tabHistory" class="pb-3 border-b-2 border-transparent hover:text-brand-900 flex items-center space-x-2 transition">
+        <i class="ph-bold ph-journal"></i>
+        <span>Histórico & Registros</span>
+      </button>
+    </div>
+
+    <section id="sectionToday" class="space-y-6">
+      
+      <!-- Date Banner -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-cream-100/80 p-4 rounded-2xl border border-cream-200">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-brand-500">Registro de Hoje</span>
+          <h2 id="currentFormattedDate" class="text-lg font-serif font-bold text-brand-900 capitalize">
+            ...
+          </h2>
+        </div>
+        <div id="entryStatusBadge" class="self-start sm:self-auto px-3 py-1 bg-amber-100/80 text-amber-800 text-xs font-medium rounded-full flex items-center space-x-1.5 border border-amber-200">
+          <i class="ph-bold ph-clock"></i>
+          <span>Pendente</span>
+        </div>
+      </div>
+
+      <!-- Gratitude Form -->
+      <form id="gratitudeForm" class="space-y-5">
+        <div class="space-y-4">
+          <!-- Item 1 -->
+          <div class="group">
+            <label for="item1" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">1</span>
+              <span>Uma bênção, momento bom ou conquista de hoje</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="item1" required placeholder="Ex: Tomei um café tranquilo logo cedo ouvindo música..."
+                class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="group">
+            <label for="item2" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">2</span>
+              <span>Uma pessoa, conversa ou gesto especial</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="item2" required placeholder="Ex: O carinho e a paciência da minha mãe comigo..."
+                class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
+            </div>
+          </div>
+
+          <!-- Item 3 -->
+          <div class="group">
+            <label for="item3" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">3</span>
+              <span>Um detalhe simples que trouxe paz ou alegria</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="item3" required placeholder="Ex: O sol brilhando na janela à tarde..."
+                class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button type="submit" id="saveBtn"
+            class="w-full py-4 px-6 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-white font-semibold text-base shadow-lg shadow-brand-500/25 transition duration-200 flex items-center justify-center space-x-2 group">
+            <i class="ph-bold ph-heart text-lg group-hover:scale-125 transition transform duration-200"></i>
+            <span id="saveBtnText">Guardar Gratidão de Hoje</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section id="sectionHistory" class="space-y-6 hidden">
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+        <div class="relative w-full sm:w-72">
+          <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-400 text-lg"></i>
+          <input type="text" id="searchInput" placeholder="Buscar nas gratidões..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-brand-200 text-sm text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400">
+        </div>
+        <div class="text-xs text-brand-600 font-medium self-end sm:self-auto">
+          Total de registros: <span id="totalEntriesCount" class="font-bold text-brand-900">0</span>
+        </div>
+      </div>
+
+      <!-- Entries Container -->
+      <div id="historyContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamic Cards rendered via JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyHistoryState" class="hidden text-center py-12 space-y-3 glass-card rounded-3xl border border-brand-200">
+        <div class="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto text-brand-500 text-2xl">
+          <i class="ph-fill ph-book-open"></i>
+        </div>
+        <h3 class="font-serif text-lg font-bold text-brand-900">Nenhum registro encontrado</h3>
+        <p class="text-sm text-brand-600 max-w-sm mx-auto">Você ainda não escreveu nenhuma gratidão ou a sua busca não retornou resultados.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-6 text-center text-xs text-brand-600/70 border-t border-brand-200/50 mt-12">
+    <p>Diário da Gratidão • Cultivando pensamentos leves todos os dias ✨</p>
+  </footer>
+
+  <!-- Notification Config Modal -->
+  <div id="notificationModal" class="fixed inset-0 z-50 bg-brand-900/40 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition duration-300">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl border border-brand-100 transform scale-95 transition duration-300" id="notificationModalContent">
+      
+      <div class="flex items-center justify-between border-b border-brand-100 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-xl">
+            <i class="ph-fill ph-bell"></i>
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-brand-900">Lembrete Diário</h3>
+            <p class="text-xs text-brand-600">Notificação Web Push</p>
+          </div>
+        </div>
+        <button id="closeNotificationBtn" class="text-brand-400 hover:text-brand-800 p-1 rounded-lg">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Push Permission Status -->
+        <div id="pushStatusBox" class="p-4 rounded-2xl bg-cream-100 border border-cream-200 flex items-start space-x-3 text-xs">
+          <i class="ph-fill ph-info text-brand-500 text-base flex-shrink-0 mt-0.5"></i>
+          <div class="space-y-1">
+            <p id="pushStatusText" class="font-semibold text-brand-900">Ative para não esquecer de registrar seu dia.</p>
+            <p class="text-brand-600">As notificações são enviadas diretamente pelo navegador no horário escolhido.</p>
+          </div>
+        </div>
+
+        <!-- Permission Button -->
+        <button id="enablePushBtn" class="w-full py-3 px-4 rounded-xl bg-brand-100 hover:bg-brand-200 text-brand-800 font-semibold text-sm transition flex items-center justify-center space-x-2">
+          <i class="ph-bold ph-bell-ringing"></i>
+          <span id="enablePushBtnText">Permitir Notificações no Navegador</span>
+        </button>
+
+        <!-- Time Picker -->
+        <div class="space-y-2 pt-2">
+          <label for="reminderTime" class="block text-xs font-bold uppercase tracking-wider text-brand-700">Horário do Lembrete</label>
+          <input type="time" id="reminderTime" value="20:00"
+            class="w-full px-4 py-3 rounded-xl bg-brand-50 border border-brand-200 text-brand-900 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-400 text-center text-lg">
+        </div>
+      </div>
+
+      <div class="pt-2 flex space-x-3">
+        <button id="saveNotificationSettingsBtn" class="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm shadow-md transition">
+          Salvar Configurações
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Entry Modal -->
+  <div id="editModal" class="fixed inset-0 z-50 bg-brand-900/40 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition duration-300">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-brand-100 transform scale-95 transition duration-300" id="editModalContent">
+      <div class="flex items-center justify-between border-b border-brand-100 pb-3">
+        <h3 class="font-serif font-bold text-lg text-brand-900">Editar Gratidão</h3>
+        <button id="closeEditBtn" class="text-brand-400 hover:text-brand-800 p-1">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <form id="editForm" class="space-y-4">
+        <input type="hidden" id="editDateKey">
+        <div>
+          <label class="block text-xs font-bold text-brand-700 mb-1">Item 1</label>
+          <input type="text" id="editItem1" required class="w-full px-3 py-2.5 rounded-xl bg-brand-50 border border-brand-200 text-sm text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-400">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-700 mb-1">Item 2</label>
+          <input type="text" id="editItem2" required class="w-full px-3 py-2.5 rounded-xl bg-brand-50 border border-brand-200 text-sm text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-400">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-brand-700 mb-1">Item 3</label>
+          <input type="text" id="editItem3" required class="w-full px-3 py-2.5 rounded-xl bg-brand-50 border border-brand-200 text-sm text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-400">
+        </div>
+
+        <div class="flex space-x-3 pt-2">
+          <button type="button" id="cancelEditBtn" class="w-1/2 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm transition">
+            Cancelar
+          </button>
+          <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition shadow-md">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Alert Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="px-5 py-3.5 rounded-2xl bg-brand-900 text-white text-sm font-medium shadow-2xl flex items-center space-x-3 border border-brand-700">
+      <i id="toastIcon" class="ph-fill ph-check-circle text-brand-300 text-xl"></i>
+      <span id="toastMessage">Operação realizada com sucesso!</span>
+    </div>
+  </div>
+
+  <script>
+    /* Quotes Database */
+    const QUOTES = [
+      { text: "A gratidão transforma o que temos em suficiente.", author: "Provérbio Anônimo" },
+      { text: "Sinta gratidão pelas pequenas coisas e você descobrirá que elas eram grandes.", author: "John C. Maxwell" },
+      { text: "A gratidão é a memória do coração.", author: "Jean-Baptiste Massieu" },
+      { text: "Quando você se concentra no que é bom, o que é bom melhora.", author: "Abraham Hicks" },
+      { text: "Não são as pessoas felizes que são gratas, são as pessoas gratas que são felizes.", author: "Francis Bacon" },
+      { text: "A gratidão abre a porta para a simplicidade e paz.", author: "Epicteto" }
+    ];
+
+    /* Storage Keys */
+    const STORAGE_KEY = 'diario_gratidao_entries';
+    const SETTINGS_KEY = 'diario_gratidao_settings';
+
+    /* State Management */
+    let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{"time":"20:00","enabled":false}');
+    let timerCheckInterval = null;
+
+    /* DOM Helper Functions */
+    const getTodayKey = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    const formatFullDate = (dateStr) => {
+      const parts = dateStr.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      return d.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initDateDisplay();
+      initQuote();
+      initTabs();
+      initForm();
+      initHistory();
+      initStreak();
+      initNotificationSystem();
+    });
+
+    // Display formatted date
+    function initDateDisplay() {
+      const dateElem = document.getElementById('currentFormattedDate');
+      if (dateElem) {
+        dateElem.textContent = formatFullDate(getTodayKey());
+      }
+    }
+
+    // Display daily quote
+    function initQuote() {
+      const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+      const quote = QUOTES[dayOfYear % QUOTES.length];
+      document.getElementById('dailyQuote').textContent = `"${quote.text}"`;
+      document.getElementById('dailyQuoteAuthor').textContent = `— ${quote.author}`;
+    }
+
+    // Tabs switching
+    function initTabs() {
+      const tabToday = document.getElementById('tabToday');
+      const tabHistory = document.getElementById('tabHistory');
+      const sectionToday = document.getElementById('sectionToday');
+      const sectionHistory = document.getElementById('sectionHistory');
+
+      tabToday.addEventListener('click', () => {
+        tabToday.classList.add('border-brand-500', 'text-brand-900');
+        tabToday.classList.remove('border-transparent');
+        tabHistory.classList.remove('border-brand-500', 'text-brand-900');
+        tabHistory.classList.add('border-transparent');
+        sectionToday.classList.remove('hidden');
+        sectionHistory.classList.add('hidden');
+      });
+
+      tabHistory.addEventListener('click', () => {
+        tabHistory.classList.add('border-brand-500', 'text-brand-900');
+        tabHistory.classList.remove('border-transparent');
+        tabToday.classList.remove('border-brand-500', 'text-brand-900');
+        tabToday.classList.add('border-transparent');
+        sectionHistory.classList.remove('hidden');
+        sectionToday.classList.add('hidden');
+        renderHistory();
+      });
+    }
+
+    function initForm() {
+      const form = document.getElementById('gratitudeForm');
+      const todayKey = getTodayKey();
+      const statusBadge = document.getElementById('entryStatusBadge');
+      const saveBtnText = document.getElementById('saveBtnText');
+
+      // Check if entry exists for today
+      if (entries[todayKey]) {
+        document.getElementById('item1').value = entries[todayKey][0] || '';
+        document.getElementById('item2').value = entries[todayKey][1] || '';
+        document.getElementById('item3').value = entries[todayKey][2] || '';
+        
+        statusBadge.className = "self-start sm:self-auto px-3 py-1 bg-emerald-100/90 text-emerald-800 text-xs font-medium rounded-full flex items-center space-x-1.5 border border-emerald-200";
+        statusBadge.innerHTML = `<i class="ph-bold ph-check"></i><span>Registrado Hoje</span>`;
+        saveBtnText.textContent = "Atualizar Gratidão de Hoje";
+      }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const v1 = document.getElementById('item1').value.trim();
+        const v2 = document.getElementById('item2').value.trim();
+        const v3 = document.getElementById('item3').value.trim();
+
+        if (!v1 || !v2 || !v3) {
+          showToast('Por favor, preencha as 3 gratidões.', 'ph-warning');
+          return;
+        }
+
+        const isNew = !entries[todayKey];
+        entries[todayKey] = [v1, v2, v3];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+
+        statusBadge.className = "self-start sm:self-auto px-3 py-1 bg-emerald-100/90 text-emerald-800 text-xs font-medium rounded-full flex items-center space-x-1.5 border border-emerald-200";
+        statusBadge.innerHTML = `<i class="ph-bold ph-check"></i><span>Registrado Hoje</span>`;
+        saveBtnText.textContent = "Atualizar Gratidão de Hoje";
+
+        initStreak();
+
+        // Celebration
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.7 },
+            colors: ['#c8765e', '#e7bcab', '#d79780']
+          });
+        }
+
+        showToast(isNew ? 'Gratidão de hoje registrada com carinho! ✨' : 'Sua gratidão foi atualizada com sucesso!');
+      });
+    }
+
+    function initStreak() {
+      let currentStreak = 0;
+      let checkDate = new Date();
+
+      while (true) {
+        const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+        if (entries[key]) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          // If today isn't entered yet, check if yesterday was entered to keep streak active
+          if (currentStreak === 0) {
+            checkDate.setDate(checkDate.getDate() - 1);
+            const yesterdayKey = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+            if (entries[yesterdayKey]) {
+              currentStreak++;
+              checkDate.setDate(checkDate.getDate() - 1);
+              continue;
+            }
+          }
+          break;
+        }
+      }
+
+      document.getElementById('streakCount').textContent = currentStreak;
+    }
+
+    function initHistory() {
+      document.getElementById('searchInput').addEventListener('input', renderHistory);
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyContainer');
+      const emptyState = document.getElementById('emptyHistoryState');
+      const query = (document.getElementById('searchInput').value || '').toLowerCase();
+      
+      const sortedDates = Object.keys(entries).sort((a, b) => b.localeCompare(a));
+      let visibleCount = 0;
+      container.innerHTML = '';
+
+      sortedDates.forEach(dateKey => {
+        const items = entries[dateKey];
+        const fullText = items.join(' ').toLowerCase();
+
+        if (query && !fullText.includes(query) && !dateKey.includes(query)) {
+          return;
+        }
+
+        visibleCount++;
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl p-5 border border-brand-200/70 shadow-sm space-y-3 relative group hover:shadow-md transition duration-200 flex flex-col justify-between";
+        
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between border-b border-brand-100 pb-2.5 mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-brand-600">${formatFullDate(dateKey)}</span>
+              <div class="flex items-center space-x-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition">
+                <button onclick="openEditModal('${dateKey}')" class="p-1.5 text-brand-500 hover:text-brand-800 hover:bg-brand-50 rounded-lg" title="Editar">
+                  <i class="ph-bold ph-pencil text-base"></i>
+                </button>
+                <button onclick="deleteEntry('${dateKey}')" class="p-1.5 text-rose-500 hover:text-rose-800 hover:bg-rose-50 rounded-lg" title="Excluir">
+                  <i class="ph-bold ph-trash text-base"></i>
+                </button>
+              </div>
+            </div>
+            <ul class="space-y-2 text-sm text-brand-900">
+              <li class="flex items-start space-x-2">
+                <span class="text-brand-400 font-bold">•</span>
+                <span>${escapeHtml(items[0] || '')}</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-brand-400 font-bold">•</span>
+                <span>${escapeHtml(items[1] || '')}</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-brand-400 font-bold">•</span>
+                <span>${escapeHtml(items[2] || '')}</span>
+              </li>
+            </ul>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('totalEntriesCount').textContent = visibleCount;
+
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    window.openEditModal = function(dateKey) {
+      const item = entries[dateKey];
+      if (!item) return;
+
+      document.getElementById('editDateKey').value = dateKey;
+      document.getElementById('editItem1').value = item[0] || '';
+      document.getElementById('editItem2').value = item[1] || '';
+      document.getElementById('editItem3').value = item[2] || '';
+
+      const modal = document.getElementById('editModal');
+      const content = document.getElementById('editModalContent');
+      modal.classList.remove('pointer-events-none', 'opacity-0');
+      content.classList.remove('scale-95');
+    };
+
+    function closeEditModal() {
+      const modal = document.getElementById('editModal');
+      const content = document.getElementById('editModalContent');
+      modal.classList.add('pointer-events-none', 'opacity-0');
+      content.classList.add('scale-95');
+    }
+
+    document.getElementById('closeEditBtn').addEventListener('click', closeEditModal);
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+
+    document.getElementById('editForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const dateKey = document.getElementById('editDateKey').value;
+      const v1 = document.getElementById('editItem1').value.trim();
+      const v2 = document.getElementById('editItem2').value.trim();
+      const v3 = document.getElementById('editItem3').value.trim();
+
+      entries[dateKey] = [v1, v2, v3];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      closeEditModal();
+      renderHistory();
+      if (dateKey === getTodayKey()) {
+        initForm();
+      }
+      showToast('Registro atualizado!');
+    });
+
+    window.deleteEntry = function(dateKey) {
+      if (confirm('Deseja realmente apagar esta memória de gratidão?')) {
+        delete entries[dateKey];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        renderHistory();
+        initStreak();
+        if (dateKey === getTodayKey()) {
+          document.getElementById('item1').value = '';
+          document.getElementById('item2').value = '';
+          document.getElementById('item3').value = '';
+          const statusBadge = document.getElementById('entryStatusBadge');
+          statusBadge.className = "self-start sm:self-auto px-3 py-1 bg-amber-100/80 text-amber-800 text-xs font-medium rounded-full flex items-center space-x-1.5 border border-amber-200";
+          statusBadge.innerHTML = `<i class="ph-bold ph-clock"></i><span>Pendente</span>`;
+          document.getElementById('saveBtnText').textContent = "Guardar Gratidão de Hoje";
+        }
+        showToast('Registro removido.');
+      }
+    };
+
+    function initNotificationSystem() {
+      const openBtn = document.getElementById('openNotificationBtn');
+      const closeBtn = document.getElementById('closeNotificationBtn');
+      const modal = document.getElementById('notificationModal');
+      const modalContent = document.getElementById('notificationModalContent');
+      const enablePushBtn = document.getElementById('enablePushBtn');
+      const saveSettingsBtn = document.getElementById('saveNotificationSettingsBtn');
+      const reminderTimeInput = document.getElementById('reminderTime');
+
+      reminderTimeInput.value = settings.time || '20:00';
+
+      openBtn.addEventListener('click', () => {
+        modal.classList.remove('pointer-events-none', 'opacity-0');
+        modalContent.classList.remove('scale-95');
+        updatePushStatusUI();
+      });
+
+      const closeModal = () => {
+        modal.classList.add('pointer-events-none', 'opacity-0');
+        modalContent.classList.add('scale-95');
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+
+      enablePushBtn.addEventListener('click', async () => {
+        if (!("Notification" in window)) {
+          showToast("Navegador não suporta Notificações Push.", "ph-warning");
+          return;
+        }
+
+        const perm = await Notification.requestPermission();
+        updatePushStatusUI();
+
+        if (perm === 'granted') {
+          showToast('Notificações permitidas com sucesso!');
+        } else {
+          showToast('Permissão negada para notificações.', 'ph-warning');
+        }
+      });
+
+      saveSettingsBtn.addEventListener('click', () => {
+        settings.time = reminderTimeInput.value;
+        settings.enabled = ("Notification" in window && Notification.permission === "granted");
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        closeModal();
+        showToast('Lembrete diário configurado para as ' + settings.time);
+        startNotificationTimer();
+      });
+
+      startNotificationTimer();
+    }
+
+    function updatePushStatusUI() {
+      const statusText = document.getElementById('pushStatusText');
+      const enablePushBtnText = document.getElementById('enablePushBtnText');
+      const notificationDot = document.getElementById('notificationDot');
+
+      if (!("Notification" in window)) {
+        statusText.textContent = "Este navegador não suporta Notificações Push.";
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        statusText.textContent = "Permissão concedida! As notificações serão enviadas diariamente.";
+        enablePushBtnText.textContent = "Notificações Ativadas ✓";
+        notificationDot.classList.remove('hidden');
+      } else if (Notification.permission === 'denied') {
+        statusText.textContent = "Notificações bloqueadas nas configurações do navegador.";
+        enablePushBtnText.textContent = "Bloqueado no Navegador";
+      } else {
+        statusText.textContent = "Clique abaixo para permitir o envio do lembrete diário.";
+        enablePushBtnText.textContent = "Permitir Notificações no Navegador";
+        notificationDot.classList.add('hidden');
+      }
+    }
+
+    function startNotificationTimer() {
+      if (timerCheckInterval) clearInterval(timerCheckInterval);
+
+      // Check every 30 seconds if it's time to notify
+      timerCheckInterval = setInterval(() => {
+        if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+        const now = new Date();
+        const currentHoursMinutes = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        if (currentHoursMinutes === settings.time && !entries[getTodayKey()]) {
+          // Check if already notified this minute
+          const lastNotified = localStorage.getItem('diario_last_notified');
+          const today = getTodayKey();
+
+          if (lastNotified !== `${today}_${settings.time}`) {
+            localStorage.setItem('diario_last_notified', `${today}_${settings.time}`);
+            new Notification('✨ Hora do Diário da Gratidão', {
+              body: 'Separe 2 minutos para registrar 3 coisas boas do seu dia!',
+              icon: 'https://cdn-icons-png.flaticon.com/512/2904/2904847.png'
+            });
+          }
+        }
+      }, 30000);
+    }
+
+    /* Toast Notification Helper */
+    function showToast(msg, iconClass = 'ph-check-circle') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMessage.textContent = msg;
+      toastIcon.className = `ph-fill ${iconClass} text-brand-300 text-xl`;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
