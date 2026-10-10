@@ -73,9 +73,9 @@
       border-radius: 9999px;
     }
     .glass-card {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(231, 188, 171, 0.3);
+      border: 1px solid rgba(231, 188, 171, 0.35);
     }
   </style>
 </head>
@@ -145,6 +145,7 @@
       </button>
     </div>
 
+    <!-- Section Today -->
     <section id="sectionToday" class="space-y-6">
       
       <!-- Date Banner -->
@@ -161,57 +162,99 @@
         </div>
       </div>
 
-      <!-- Gratitude Form -->
-      <form id="gratitudeForm" class="space-y-5">
-        <div class="space-y-4">
-          <!-- Item 1 -->
-          <div class="group">
-            <label for="item1" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">1</span>
-              <span>Uma bênção, momento bom ou conquista de hoje</span>
-            </label>
-            <div class="relative">
-              <input type="text" id="item1" required placeholder="Ex: Tomei um café tranquilo logo cedo ouvindo música..."
-                class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
-            </div>
+      <!-- Quick Add / Moment Capture Section -->
+      <div class="bg-gradient-to-br from-brand-100/80 to-cream-100/90 rounded-3xl p-5 border border-brand-200/80 shadow-sm space-y-4">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center text-base shadow-sm">
+            <i class="ph-fill ph-lightning"></i>
           </div>
-
-          <!-- Item 2 -->
-          <div class="group">
-            <label for="item2" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">2</span>
-              <span>Uma pessoa, conversa ou gesto especial</span>
-            </label>
-            <div class="relative">
-              <input type="text" id="item2" required placeholder="Ex: O carinho e a paciência da minha mãe comigo..."
-                class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
-            </div>
-          </div>
-
-          <!-- Item 3 -->
-          <div class="group">
-            <label for="item3" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">3</span>
-              <span>Um detalhe simples que trouxe paz ou alegria</span>
-            </label>
-            <div class="relative">
-              <input type="text" id="item3" required placeholder="Ex: O sol brilhando na janela à tarde..."
-                class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
-            </div>
+          <div>
+            <h3 class="font-serif font-bold text-base text-brand-900 leading-tight">Captura Rápida de Momentos</h3>
+            <p class="text-xs text-brand-600">Não espere a noite chegar! Anote o que te fez bem agora.</p>
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="pt-2">
-          <button type="submit" id="saveBtn"
-            class="w-full py-4 px-6 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-white font-semibold text-base shadow-lg shadow-brand-500/25 transition duration-200 flex items-center justify-center space-x-2 group">
-            <i class="ph-bold ph-heart text-lg group-hover:scale-125 transition transform duration-200"></i>
-            <span id="saveBtnText">Guardar Gratidão de Hoje</span>
+        <form id="quickMomentForm" class="flex flex-col sm:flex-row gap-2">
+          <input type="text" id="quickMomentInput" placeholder="O que te fez sorrir agora?" required
+            class="flex-grow px-4 py-3 rounded-2xl bg-white border border-brand-200 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm shadow-sm">
+          <button type="submit" 
+            class="py-3 px-5 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white font-semibold text-sm shadow-md transition flex items-center justify-center space-x-1.5 flex-shrink-0">
+            <i class="ph-bold ph-plus"></i>
+            <span>Adicionar</span>
           </button>
+        </form>
+
+        <!-- List of Today's Captured Moments -->
+        <div id="quickMomentsContainer" class="space-y-2 pt-1 hidden">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-brand-700 px-1">
+            <span>Momentos Gravados Hoje</span>
+            <span id="quickMomentsCount" class="text-brand-500 font-extrabold">0</span>
+          </div>
+          <div id="quickMomentsList" class="space-y-2">
+            <!-- Dynamic moment items -->
+          </div>
         </div>
-      </form>
+      </div>
+
+      <!-- Consolidation Form (3 Daily Gratitudes) -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-serif font-bold text-lg text-brand-900">Consolidar 3 Gratidões do Dia</h3>
+          <span class="text-xs text-brand-600 font-medium">Preencha ou selecione dos seus momentos</span>
+        </div>
+
+        <form id="gratitudeForm" class="space-y-5">
+          <div class="space-y-4">
+            <!-- Item 1 -->
+            <div class="group">
+              <label for="item1" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">1</span>
+                <span>Uma bênção, momento bom ou conquista de hoje</span>
+              </label>
+              <div class="relative">
+                <input type="text" id="item1" required placeholder="Ex: Tomei um café tranquilo logo cedo..."
+                  class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="group">
+              <label for="item2" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">2</span>
+                <span>Uma pessoa, conversa ou gesto especial</span>
+              </label>
+              <div class="relative">
+                <input type="text" id="item2" required placeholder="Ex: A conversa carinhosa que tive no almoço..."
+                  class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="group">
+              <label for="item3" class="block text-sm font-semibold text-brand-800 mb-1.5 flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-full bg-brand-200 text-brand-800 flex items-center justify-center text-xs font-bold">3</span>
+                <span>Um detalhe simples que trouxe paz ou alegria</span>
+              </label>
+              <div class="relative">
+                <input type="text" id="item3" required placeholder="Ex: O sol brilhando na minha janela..."
+                  class="w-full px-4 py-3.5 rounded-2xl bg-white border border-brand-200/80 text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition shadow-sm text-sm sm:text-base">
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button type="submit" id="saveBtn"
+              class="w-full py-4 px-6 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-white font-semibold text-base shadow-lg shadow-brand-500/25 transition duration-200 flex items-center justify-center space-x-2 group">
+              <i class="ph-bold ph-heart text-lg group-hover:scale-125 transition transform duration-200"></i>
+              <span id="saveBtnText">Guardar Gratidão de Hoje</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
 
+    <!-- Section History -->
     <section id="sectionHistory" class="space-y-6 hidden">
       <!-- Search & Filters -->
       <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
@@ -265,7 +308,6 @@
       </div>
 
       <div class="space-y-4">
-        <!-- Push Permission Status -->
         <div id="pushStatusBox" class="p-4 rounded-2xl bg-cream-100 border border-cream-200 flex items-start space-x-3 text-xs">
           <i class="ph-fill ph-info text-brand-500 text-base flex-shrink-0 mt-0.5"></i>
           <div class="space-y-1">
@@ -274,13 +316,11 @@
           </div>
         </div>
 
-        <!-- Permission Button -->
         <button id="enablePushBtn" class="w-full py-3 px-4 rounded-xl bg-brand-100 hover:bg-brand-200 text-brand-800 font-semibold text-sm transition flex items-center justify-center space-x-2">
           <i class="ph-bold ph-bell-ringing"></i>
           <span id="enablePushBtnText">Permitir Notificações no Navegador</span>
         </button>
 
-        <!-- Time Picker -->
         <div class="space-y-2 pt-2">
           <label for="reminderTime" class="block text-xs font-bold uppercase tracking-wider text-brand-700">Horário do Lembrete</label>
           <input type="time" id="reminderTime" value="20:00"
@@ -342,7 +382,6 @@
   </div>
 
   <script>
-    /* Quotes Database */
     const QUOTES = [
       { text: "A gratidão transforma o que temos em suficiente.", author: "Provérbio Anônimo" },
       { text: "Sinta gratidão pelas pequenas coisas e você descobrirá que elas eram grandes.", author: "John C. Maxwell" },
@@ -355,10 +394,12 @@
     /* Storage Keys */
     const STORAGE_KEY = 'diario_gratidao_entries';
     const SETTINGS_KEY = 'diario_gratidao_settings';
+    const QUICK_MOMENTS_KEY = 'diario_gratidao_quick_moments';
 
     /* State Management */
     let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{"time":"20:00","enabled":false}');
+    let quickMoments = JSON.parse(localStorage.getItem(QUICK_MOMENTS_KEY) || '{}');
     let timerCheckInterval = null;
 
     /* DOM Helper Functions */
@@ -373,17 +414,23 @@
       return d.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     };
 
+    const getCurrentTimeFormatted = () => {
+      const now = new Date();
+      return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    };
+
+    /* Initialization */
     document.addEventListener('DOMContentLoaded', () => {
       initDateDisplay();
       initQuote();
       initTabs();
+      initQuickMoments();
       initForm();
       initHistory();
       initStreak();
       initNotificationSystem();
     });
 
-    // Display formatted date
     function initDateDisplay() {
       const dateElem = document.getElementById('currentFormattedDate');
       if (dateElem) {
@@ -391,7 +438,6 @@
       }
     }
 
-    // Display daily quote
     function initQuote() {
       const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
       const quote = QUOTES[dayOfYear % QUOTES.length];
@@ -399,7 +445,6 @@
       document.getElementById('dailyQuoteAuthor').textContent = `— ${quote.author}`;
     }
 
-    // Tabs switching
     function initTabs() {
       const tabToday = document.getElementById('tabToday');
       const tabHistory = document.getElementById('tabHistory');
@@ -426,13 +471,123 @@
       });
     }
 
+    function initQuickMoments() {
+      const form = document.getElementById('quickMomentForm');
+      const input = document.getElementById('quickMomentInput');
+
+      renderQuickMoments();
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        const todayKey = getTodayKey();
+        if (!quickMoments[todayKey]) {
+          quickMoments[todayKey] = [];
+        }
+
+        const newMoment = {
+          id: Date.now().toString(),
+          time: getCurrentTimeFormatted(),
+          text: text
+        };
+
+        quickMoments[todayKey].push(newMoment);
+        localStorage.setItem(QUICK_MOMENTS_KEY, JSON.stringify(quickMoments));
+
+        input.value = '';
+        renderQuickMoments();
+        showToast('Momento guardado com sucesso! ✨');
+      });
+    }
+
+    function renderQuickMoments() {
+      const todayKey = getTodayKey();
+      const container = document.getElementById('quickMomentsContainer');
+      const list = document.getElementById('quickMomentsList');
+      const count = document.getElementById('quickMomentsCount');
+
+      const moments = quickMoments[todayKey] || [];
+      count.textContent = moments.length;
+
+      if (moments.length === 0) {
+        container.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+
+      container.classList.remove('hidden');
+      list.innerHTML = '';
+
+      moments.forEach((moment) => {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between p-3 rounded-xl bg-white/90 border border-brand-200/60 shadow-2xs space-x-3 text-sm";
+        item.innerHTML = `
+          <div class="flex items-center space-x-2.5 min-w-0">
+            <span class="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 text-xs font-semibold flex-shrink-0">${escapeHtml(moment.time)}</span>
+            <p class="text-brand-900 font-medium truncate">${escapeHtml(moment.text)}</p>
+          </div>
+          <div class="flex items-center space-x-1 flex-shrink-0">
+            <button onclick="useMomentInGratitude('${moment.id}')" 
+              class="px-2.5 py-1 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold transition flex items-center space-x-1"
+              title="Usar em uma das 3 gratidões">
+              <i class="ph-bold ph-plus text-xs"></i>
+              <span>Usar nas Gratidões</span>
+            </button>
+            <button onclick="deleteQuickMoment('${moment.id}')" 
+              class="p-1 text-rose-400 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+              title="Excluir">
+              <i class="ph-bold ph-trash text-sm"></i>
+            </button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    window.useMomentInGratitude = function(momentId) {
+      const todayKey = getTodayKey();
+      const moments = quickMoments[todayKey] || [];
+      const moment = moments.find(m => m.id === momentId);
+      if (!moment) return;
+
+      const input1 = document.getElementById('item1');
+      const input2 = document.getElementById('item2');
+      const input3 = document.getElementById('item3');
+
+      if (!input1.value.trim()) {
+        input1.value = moment.text;
+        showToast('Adicionado ao Campo 1!');
+      } else if (!input2.value.trim()) {
+        input2.value = moment.text;
+        showToast('Adicionado ao Campo 2!');
+      } else if (!input3.value.trim()) {
+        input3.value = moment.text;
+        showToast('Adicionado ao Campo 3!');
+      } else {
+        // If all are filled, overwrite item 3 or prompt
+        input3.value = moment.text;
+        showToast('Substituído no Campo 3!');
+      }
+    };
+
+    window.deleteQuickMoment = function(momentId) {
+      const todayKey = getTodayKey();
+      if (!quickMoments[todayKey]) return;
+
+      quickMoments[todayKey] = quickMoments[todayKey].filter(m => m.id !== momentId);
+      localStorage.setItem(QUICK_MOMENTS_KEY, JSON.stringify(quickMoments));
+      renderQuickMoments();
+      showToast('Momento removido.');
+    };
+
     function initForm() {
       const form = document.getElementById('gratitudeForm');
       const todayKey = getTodayKey();
       const statusBadge = document.getElementById('entryStatusBadge');
       const saveBtnText = document.getElementById('saveBtnText');
 
-      // Check if entry exists for today
       if (entries[todayKey]) {
         document.getElementById('item1').value = entries[todayKey][0] || '';
         document.getElementById('item2').value = entries[todayKey][1] || '';
@@ -464,7 +619,6 @@
 
         initStreak();
 
-        // Celebration
         if (typeof confetti === 'function') {
           confetti({
             particleCount: 80,
@@ -488,7 +642,6 @@
           currentStreak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
-          // If today isn't entered yet, check if yesterday was entered to keep streak active
           if (currentStreak === 0) {
             checkDate.setDate(checkDate.getDate() - 1);
             const yesterdayKey = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
@@ -717,7 +870,6 @@
     function startNotificationTimer() {
       if (timerCheckInterval) clearInterval(timerCheckInterval);
 
-      // Check every 30 seconds if it's time to notify
       timerCheckInterval = setInterval(() => {
         if (!("Notification" in window) || Notification.permission !== "granted") return;
 
@@ -725,7 +877,6 @@
         const currentHoursMinutes = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
         if (currentHoursMinutes === settings.time && !entries[getTodayKey()]) {
-          // Check if already notified this minute
           const lastNotified = localStorage.getItem('diario_last_notified');
           const today = getTodayKey();
 
