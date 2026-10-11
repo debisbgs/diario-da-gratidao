@@ -96,7 +96,7 @@
         </div>
       </div>
 
-      <!-- Header Action Controls -->
+      <!-- Header Controls -->
       <div class="flex items-center space-x-2">
         <!-- Streak Badge -->
         <div id="streakBadge" class="flex items-center space-x-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full text-xs font-semibold shadow-sm" title="Dias consecutivos anotando a gratidão">
@@ -104,7 +104,12 @@
           <span id="streakCount">0</span> <span class="hidden sm:inline">dias</span>
         </div>
 
-        <!-- Notification Modal Trigger -->
+        <!-- Backup Control -->
+        <button id="backupDataBtn" class="p-2 text-brand-700 hover:text-brand-900 hover:bg-brand-100/60 rounded-xl transition duration-200" title="Baixar Backup dos Dados">
+          <i class="ph ph-download-simple text-xl"></i>
+        </button>
+
+        <!-- Notification Trigger -->
         <button id="openNotificationBtn" class="p-2 text-brand-700 hover:text-brand-900 hover:bg-brand-100/60 rounded-xl transition duration-200 relative" title="Configurar Lembretes">
           <i class="ph ph-bell text-xl"></i>
           <span id="notificationDot" class="hidden absolute top-2 right-2 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white"></span>
@@ -187,7 +192,7 @@
         <!-- List of Today's Captured Moments -->
         <div id="quickMomentsContainer" class="space-y-2 pt-1 hidden">
           <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-brand-700 px-1">
-            <span>Momentos Gravados Hoje</span>
+            <span>Momentos Gravados Hoje (Salvos no Histórico)</span>
             <span id="quickMomentsCount" class="text-brand-500 font-extrabold">0</span>
           </div>
           <div id="quickMomentsList" class="space-y-2">
@@ -200,7 +205,7 @@
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-serif font-bold text-lg text-brand-900">Consolidar 3 Gratidões do Dia</h3>
-          <span class="text-xs text-brand-600 font-medium">Preencha ou selecione dos seus momentos</span>
+          <span class="text-xs text-brand-600 font-medium">Preencha ou escolha dos seus momentos</span>
         </div>
 
         <form id="gratitudeForm" class="space-y-5">
@@ -260,11 +265,11 @@
       <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
         <div class="relative w-full sm:w-72">
           <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-400 text-lg"></i>
-          <input type="text" id="searchInput" placeholder="Buscar nas gratidões..."
+          <input type="text" id="searchInput" placeholder="Buscar nas gratidões e momentos..."
             class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-brand-200 text-sm text-brand-900 placeholder-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-400">
         </div>
         <div class="text-xs text-brand-600 font-medium self-end sm:self-auto">
-          Total de registros: <span id="totalEntriesCount" class="font-bold text-brand-900">0</span>
+          Total de dias registrados: <span id="totalEntriesCount" class="font-bold text-brand-900">0</span>
         </div>
       </div>
 
@@ -429,6 +434,7 @@
       initHistory();
       initStreak();
       initNotificationSystem();
+      initBackupBtn();
     });
 
     function initDateDisplay() {
@@ -493,12 +499,14 @@
           text: text
         };
 
+        // Save immediately and permanently to LocalStorage
         quickMoments[todayKey].push(newMoment);
         localStorage.setItem(QUICK_MOMENTS_KEY, JSON.stringify(quickMoments));
 
         input.value = '';
         renderQuickMoments();
-        showToast('Momento guardado com sucesso! ✨');
+        renderHistory(); // Keep history synchronized
+        showToast('Momento guardado e salvo para sempre no seu histórico! ✨');
       });
     }
 
@@ -535,7 +543,7 @@
               <i class="ph-bold ph-plus text-xs"></i>
               <span>Usar nas Gratidões</span>
             </button>
-            <button onclick="deleteQuickMoment('${moment.id}')" 
+            <button onclick="deleteQuickMoment('${todayKey}', '${moment.id}')" 
               class="p-1 text-rose-400 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
               title="Excluir">
               <i class="ph-bold ph-trash text-sm"></i>
@@ -558,27 +566,29 @@
 
       if (!input1.value.trim()) {
         input1.value = moment.text;
-        showToast('Adicionado ao Campo 1!');
+        showToast('Copiado para o Campo 1!');
       } else if (!input2.value.trim()) {
         input2.value = moment.text;
-        showToast('Adicionado ao Campo 2!');
+        showToast('Copiado para o Campo 2!');
       } else if (!input3.value.trim()) {
         input3.value = moment.text;
-        showToast('Adicionado ao Campo 3!');
+        showToast('Copiado para o Campo 3!');
       } else {
-        // If all are filled, overwrite item 3 or prompt
         input3.value = moment.text;
         showToast('Substituído no Campo 3!');
       }
     };
 
-    window.deleteQuickMoment = function(momentId) {
-      const todayKey = getTodayKey();
-      if (!quickMoments[todayKey]) return;
+    window.deleteQuickMoment = function(dateKey, momentId) {
+      if (!quickMoments[dateKey]) return;
 
-      quickMoments[todayKey] = quickMoments[todayKey].filter(m => m.id !== momentId);
+      quickMoments[dateKey] = quickMoments[dateKey].filter(m => m.id !== momentId);
+      if (quickMoments[dateKey].length === 0) {
+        delete quickMoments[dateKey];
+      }
       localStorage.setItem(QUICK_MOMENTS_KEY, JSON.stringify(quickMoments));
       renderQuickMoments();
+      renderHistory();
       showToast('Momento removido.');
     };
 
@@ -638,14 +648,14 @@
 
       while (true) {
         const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
-        if (entries[key]) {
+        if (entries[key] || (quickMoments[key] && quickMoments[key].length > 0)) {
           currentStreak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
           if (currentStreak === 0) {
             checkDate.setDate(checkDate.getDate() - 1);
             const yesterdayKey = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
-            if (entries[yesterdayKey]) {
+            if (entries[yesterdayKey] || (quickMoments[yesterdayKey] && quickMoments[yesterdayKey].length > 0)) {
               currentStreak++;
               checkDate.setDate(checkDate.getDate() - 1);
               continue;
@@ -667,51 +677,98 @@
       const emptyState = document.getElementById('emptyHistoryState');
       const query = (document.getElementById('searchInput').value || '').toLowerCase();
       
-      const sortedDates = Object.keys(entries).sort((a, b) => b.localeCompare(a));
+      // Merge keys from both 3 Gratitudes and Quick Moments
+      const allDatesSet = new Set([...Object.keys(entries), ...Object.keys(quickMoments)]);
+      const sortedDates = Array.from(allDatesSet).sort((a, b) => b.localeCompare(a));
+      
       let visibleCount = 0;
       container.innerHTML = '';
 
       sortedDates.forEach(dateKey => {
-        const items = entries[dateKey];
-        const fullText = items.join(' ').toLowerCase();
+        const items = entries[dateKey] || null;
+        const moments = quickMoments[dateKey] || [];
 
-        if (query && !fullText.includes(query) && !dateKey.includes(query)) {
+        const itemsText = items ? items.join(' ').toLowerCase() : '';
+        const momentsText = moments.map(m => m.text).join(' ').toLowerCase();
+
+        if (query && !itemsText.includes(query) && !momentsText.includes(query) && !dateKey.includes(query)) {
           return;
         }
 
         visibleCount++;
         const card = document.createElement('div');
-        card.className = "bg-white rounded-2xl p-5 border border-brand-200/70 shadow-sm space-y-3 relative group hover:shadow-md transition duration-200 flex flex-col justify-between";
+        card.className = "bg-white rounded-2xl p-5 border border-brand-200/70 shadow-sm space-y-4 relative group hover:shadow-md transition duration-200 flex flex-col justify-between";
         
-        card.innerHTML = `
+        let cardHTML = `
           <div>
             <div class="flex items-center justify-between border-b border-brand-100 pb-2.5 mb-3">
               <span class="text-xs font-bold uppercase tracking-wider text-brand-600">${formatFullDate(dateKey)}</span>
               <div class="flex items-center space-x-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition">
-                <button onclick="openEditModal('${dateKey}')" class="p-1.5 text-brand-500 hover:text-brand-800 hover:bg-brand-50 rounded-lg" title="Editar">
-                  <i class="ph-bold ph-pencil text-base"></i>
-                </button>
-                <button onclick="deleteEntry('${dateKey}')" class="p-1.5 text-rose-500 hover:text-rose-800 hover:bg-rose-50 rounded-lg" title="Excluir">
+                ${items ? `
+                  <button onclick="openEditModal('${dateKey}')" class="p-1.5 text-brand-500 hover:text-brand-800 hover:bg-brand-50 rounded-lg" title="Editar Gratidões">
+                    <i class="ph-bold ph-pencil text-base"></i>
+                  </button>
+                ` : ''}
+                <button onclick="deleteEntireDayRecord('${dateKey}')" class="p-1.5 text-rose-500 hover:text-rose-800 hover:bg-rose-50 rounded-lg" title="Excluir tudo deste dia">
                   <i class="ph-bold ph-trash text-base"></i>
                 </button>
               </div>
             </div>
-            <ul class="space-y-2 text-sm text-brand-900">
-              <li class="flex items-start space-x-2">
-                <span class="text-brand-400 font-bold">•</span>
-                <span>${escapeHtml(items[0] || '')}</span>
-              </li>
-              <li class="flex items-start space-x-2">
-                <span class="text-brand-400 font-bold">•</span>
-                <span>${escapeHtml(items[1] || '')}</span>
-              </li>
-              <li class="flex items-start space-x-2">
-                <span class="text-brand-400 font-bold">•</span>
-                <span>${escapeHtml(items[2] || '')}</span>
-              </li>
-            </ul>
-          </div>
         `;
+
+        // Render 3 Gratitudes section if present
+        if (items) {
+          cardHTML += `
+            <div class="space-y-2">
+              <span class="text-xs font-bold text-brand-800 uppercase tracking-wider flex items-center space-x-1">
+                <i class="ph-fill ph-heart text-brand-500"></i>
+                <span>3 Gratidões do Dia</span>
+              </span>
+              <ul class="space-y-1.5 text-sm text-brand-900 bg-brand-50/50 p-3 rounded-xl border border-brand-100">
+                <li class="flex items-start space-x-2">
+                  <span class="text-brand-400 font-bold">•</span>
+                  <span>${escapeHtml(items[0] || '')}</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <span class="text-brand-400 font-bold">•</span>
+                  <span>${escapeHtml(items[1] || '')}</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <span class="text-brand-400 font-bold">•</span>
+                  <span>${escapeHtml(items[2] || '')}</span>
+                </li>
+              </ul>
+            </div>
+          `;
+        }
+
+        // Render Quick Captured Moments section if present
+        if (moments && moments.length > 0) {
+          cardHTML += `
+            <div class="space-y-2 pt-1">
+              <span class="text-xs font-bold text-brand-700 uppercase tracking-wider flex items-center space-x-1">
+                <i class="ph-fill ph-lightning text-amber-500"></i>
+                <span>Momentos Capturados (${moments.length})</span>
+              </span>
+              <div class="space-y-1.5">
+                ${moments.map(m => `
+                  <div class="flex items-center justify-between text-xs bg-cream-50 p-2.5 rounded-lg border border-cream-200/80">
+                    <div class="flex items-center space-x-2 min-w-0">
+                      <span class="px-1.5 py-0.5 rounded bg-brand-100 text-brand-800 font-bold flex-shrink-0">${escapeHtml(m.time)}</span>
+                      <span class="text-brand-900 font-medium truncate">${escapeHtml(m.text)}</span>
+                    </div>
+                    <button onclick="deleteQuickMoment('${dateKey}', '${m.id}')" class="text-rose-400 hover:text-rose-600 p-1 flex-shrink-0 ml-1" title="Excluir momento">
+                      <i class="ph-bold ph-x"></i>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        cardHTML += `</div>`;
+        card.innerHTML = cardHTML;
         container.appendChild(card);
       });
 
@@ -772,12 +829,18 @@
       showToast('Registro atualizado!');
     });
 
-    window.deleteEntry = function(dateKey) {
-      if (confirm('Deseja realmente apagar esta memória de gratidão?')) {
+    window.deleteEntireDayRecord = function(dateKey) {
+      if (confirm('Deseja realmente apagar todos os registros (gratidões e momentos) deste dia?')) {
         delete entries[dateKey];
+        delete quickMoments[dateKey];
+        
         localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        localStorage.setItem(QUICK_MOMENTS_KEY, JSON.stringify(quickMoments));
+        
         renderHistory();
+        renderQuickMoments();
         initStreak();
+
         if (dateKey === getTodayKey()) {
           document.getElementById('item1').value = '';
           document.getElementById('item2').value = '';
@@ -787,9 +850,30 @@
           statusBadge.innerHTML = `<i class="ph-bold ph-clock"></i><span>Pendente</span>`;
           document.getElementById('saveBtnText').textContent = "Guardar Gratidão de Hoje";
         }
-        showToast('Registro removido.');
+        showToast('Registros do dia removidos.');
       }
     };
+
+    function initBackupBtn() {
+      document.getElementById('backupDataBtn').addEventListener('click', () => {
+        const backupData = {
+          entries: entries,
+          quickMoments: quickMoments,
+          settings: settings,
+          exportDate: new Date().toISOString()
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `diario_gratidao_backup_${getTodayKey()}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+
+        showToast('Backup baixado com sucesso!');
+      });
+    }
 
     function initNotificationSystem() {
       const openBtn = document.getElementById('openNotificationBtn');
